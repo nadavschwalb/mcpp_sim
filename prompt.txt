@@ -1,0 +1,17 @@
+i want you to create a python3 based multi-robot Coverage Path Planning simulation to help me test out different algorithms
+
+I have provided you with two documents. the first is a Software Requirments Specification Document the describes the project including scope, requirements and features.
+
+pay close attention to the last page that describes the classes (Environment, Robot, Policy, Simulation, Visualization) as they are you guide on how to create the classes and modules
+
+the second document is an draw.io XML file that describes the flow of the main simulation script as well as the class diagram. use it as a reference
+
+additional requirments
+1. adhere to PEP 8 coding style and documentation
+2. comment meaningfully and make sure to comment clearly any conversions or maths
+3. this is a git environment so create the .gitignore
+4. the project will be run in a venv so create the requirements.txt file for installation
+5. visualization should be simple block and line shapes, each robot will get a color
+6. a simulation config.json file will be passed into the main script per simulation so use it for parameters. reduce consts to a minimum
+7. add clear logging using the python logging lib that seperates robots, environment and visualization logs
+8. cleanly seperate into modules
