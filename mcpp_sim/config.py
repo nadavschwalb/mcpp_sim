@@ -15,7 +15,7 @@ from .robots import Robot, action_space
 from .simulation import Simulation
 from .utils import GridLoader
 from .visualization import MatplotlibVisualizer
-
+from .network_graph import create_network_graph
 
 @dataclass(slots=True)
 class EnvironmentConfig:
@@ -87,6 +87,7 @@ class SimulationOptions:
     step_limit: Optional[int] = None
     stop_when_complete: bool = True
     step_interval_ms: Optional[float] = None
+    network_graph_type: Optional[str] = None
 
 
 @dataclass(slots=True)
@@ -156,10 +157,12 @@ def build_simulation(config: SimulationConfig) -> Simulation:
     """Construct a :class:`Simulation` from a :class:`SimulationConfig`."""
     environment = config.environment.build()
     robots = [robot_cfg.build() for robot_cfg in config.robots]
+    network_graph = create_network_graph(config.simulation.network_graph_type)
     simulation = Simulation(
         environment=environment,
         robots=robots,
         step_limit=config.simulation.step_limit,
+        network_graph=network_graph
     )
     return simulation
 

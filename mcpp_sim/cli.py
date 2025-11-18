@@ -19,7 +19,8 @@ from mcpp_sim.config import build_simulation, build_visualizer, load_config
 from mcpp_sim.environment import OccupancyGridEnvironment
 from mcpp_sim.logging_utils import configure_logging, get_simulation_logger
 from mcpp_sim.robots import Robot
-from mcpp_sim.visualization import MatplotlibVisualizer
+from mcpp_sim.network_graph import BaseNetworkGraph
+from mcpp_sim.visualization import MatplotlibVisualizer, SummaryVisualizer
 
 
 def parse_args(argv: List[str] | None = None) -> argparse.Namespace:
@@ -64,10 +65,11 @@ def main(argv: List[str] | None = None) -> int:
                 step: int,
                 env: OccupancyGridEnvironment,
                 robots: List[Robot],
+                network_graph: Optional[BaseNetworkGraph],
                 move_results: Dict[str, bool],
             ) -> None:
                 if visualizer is not None:
-                    visualizer.visualize_step(env, robots)
+                    visualizer.visualize_step(env, robots, network_graph)
                 if step_interval_seconds:
                     time.sleep(step_interval_seconds)
 
@@ -77,16 +79,16 @@ def main(argv: List[str] | None = None) -> int:
     simulation.run(steps=step_limit, stop_when_complete=config.simulation.stop_when_complete)
     logger.info(
         "Simulation complete | steps=%s | coverage=%.3f",
-        simulation.step_count,
-        simulation.coverage_ratio(),
+        simulation.step_count
     )
 
     if visualizer and not args.headless and not args.animate:
         visualizer.visualize(simulation.get_env(), simulation.get_robots())
 
     if not args.no_summary:
-        coverage = simulation.coverage_ratio()
-        print("Coverage ratio:", f"{coverage:.2%}")
+        summary = simulation.summary()
+        SummaryVisualizer(summary)
+
 
     return 0
 

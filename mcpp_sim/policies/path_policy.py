@@ -16,7 +16,7 @@ class PathPolicy(Policy):
         super().__init__()
         self._path: Deque[str] = deque(path)
 
-    def observe(self, environment: OccupancyGridEnvironment, robot: Any) -> Any:  # noqa: D401
+    def observe(self, environment: OccupancyGridEnvironment, robot: Any, robots: list) -> Any:  # noqa: D401
         """This policy does not require observations; returns ``None``."""
         return None
 

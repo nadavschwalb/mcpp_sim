@@ -17,7 +17,7 @@ class RandomPolicy(Policy):
         self.actions = tuple(actions)
         self._rng = random.Random(seed)
 
-    def observe(self, environment: OccupancyGridEnvironment, robot: Any) -> Any:  # noqa: D401
+    def observe(self, environment: OccupancyGridEnvironment, robot: Any, robots: list) -> Any:  # noqa: D401
         """Observation is not used; returns ``None``."""
         return None
 

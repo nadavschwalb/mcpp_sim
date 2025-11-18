@@ -9,10 +9,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from matplotlib.collections import LineCollection
 
 from ..environment import OccupancyGridEnvironment
 from ..logging_utils import get_visualization_logger
 from ..robots import Robot
+from ..network_graph import BaseNetworkGraph
+import math
 
 Overlay = Callable[[Axes, OccupancyGridEnvironment, Iterable[Robot]], None]
 
@@ -47,13 +50,13 @@ class MatplotlibVisualizer:
         self._draw_scene(ax, environment, robots)
         plt.show(block=True)
 
-    def visualize_step(self, environment: OccupancyGridEnvironment, robots: Iterable[Robot]) -> None:
+    def visualize_step(self, environment: OccupancyGridEnvironment, robots: Iterable[Robot], network_graph: Optional[BaseNetworkGraph]) -> None:
         """Incrementally update the visualization without blocking execution."""
         robots = tuple(robots)
         self._ensure_canvas()
         ax = self._ax
         assert ax is not None
-        self._draw_scene(ax, environment, robots)
+        self._draw_scene(ax, environment, robots, network_graph)
         plt.pause(0.001)
 
     def _color_for_robot(self, robot_id: str) -> str:
@@ -84,6 +87,7 @@ class MatplotlibVisualizer:
         ax: Axes,
         environment: OccupancyGridEnvironment,
         robots: Iterable[Robot],
+        network_graph: Optional[BaseNetworkGraph] = None,
     ) -> None:
         ax.clear()
         grid = environment.get_current_env()
@@ -107,6 +111,17 @@ class MatplotlibVisualizer:
             if self.show_robot_labels:
                 ax.text(col + 0.1, row + 0.1, robot.robot_id, color=color, fontsize=8)
 
+        if network_graph is not None:
+            ng_edge_lines = []
+            for edge in network_graph.get_graph().edges:
+                ng_edge_lines.append([
+                    tuple(reversed(network_graph.get_graph().nodes[edge[0]]['pos'])), 
+                    tuple(reversed(network_graph.get_graph().nodes[edge[1]]['pos']))
+                    ])
+
+            lc = LineCollection(ng_edge_lines, color='blue', linewidth=2, )
+            ax.add_collection(lc)
+
         for overlay in self.overlays:
             overlay(ax, environment, robots)
 
@@ -118,3 +133,24 @@ class MatplotlibVisualizer:
         ax.set_aspect("equal")
         if self._figure is not None:
             self._figure.canvas.draw_idle()
+
+class SummaryVisualizer:
+    def __init__(self, summary : dict):
+        self.summary = summary
+        num_ax = len(summary.keys())
+        rows = math.ceil(math.sqrt(num_ax))
+        cols = math.ceil(num_ax / rows)
+        self.fig, self.ax = plt.subplots(rows, cols)
+
+        self.ax = self.ax.ravel()
+
+        self.visualize()
+
+    def visualize(self):
+        for index, (metric, data) in enumerate(self.summary.items()):
+            x = np.arange(0, len(data))
+            y = data
+            self.ax[index].plot(x,y)
+            self.ax[index].set_title(metric)
+
+        plt.show(block=True)

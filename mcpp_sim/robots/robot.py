@@ -54,7 +54,7 @@ class Robot:
 
     def step(self, environment: OccupancyGridEnvironment, robots: List["Robot"]) -> bool:
         """Advance the robot by executing the next policy action."""
-        observation = self.policy.observe(environment, self)
+        observation = self.policy.observe(environment, self, robots)
         if observation is None:
             observation = self._default_observation(environment)
         move_label = self.policy.next_move(self.position, observation)
