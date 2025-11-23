@@ -10,11 +10,11 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 import numpy as np
 
 from .environment import OccupancyGridEnvironment
-from .policies import create_policy
-from .robots import Robot, action_space
+from .policies.factory import create_policy
+from .robots.robot import Robot, action_space
 from .simulation import Simulation
 from .utils import GridLoader
-from .visualization import MatplotlibVisualizer
+from .visualization.matplotlib_visualizer import MatplotlibVisualizer
 from .network_graph import create_network_graph
 
 @dataclass(slots=True)
@@ -63,18 +63,15 @@ class EnvironmentConfig:
 class RobotConfig:
     """Configuration required to construct a robot."""
 
-    robot_id: str
-    start: Sequence[int]
     policy: Mapping[str, Any]
     observation_range: int = 1
 
-    def build(self) -> Robot:
+    def build(self, robot_id: int, initial_pos : tuple) -> Robot:
         """Instantiate the configured robot."""
-        position = (int(self.start[0]), int(self.start[1]))
         policy_instance = create_policy(self.policy, action_space())
         return Robot(
-            robot_id=self.robot_id,
-            position=position,
+            robot_id=robot_id,
+            position=initial_pos,
             policy=policy_instance,
             observation_range=int(self.observation_range),
         )
@@ -83,7 +80,7 @@ class RobotConfig:
 @dataclass(slots=True)
 class SimulationOptions:
     """Simulation execution options."""
-
+    number_robots : int
     step_limit: Optional[int] = None
     stop_when_complete: bool = True
     step_interval_ms: Optional[float] = None
@@ -119,7 +116,7 @@ class SimulationConfig:
     """Structured configuration for the simulator."""
 
     environment: EnvironmentConfig
-    robots: List[RobotConfig]
+    robots: RobotConfig
     simulation: SimulationOptions = field(default_factory=SimulationOptions)
     visualization: Optional[VisualizationOptions] = None
     logging: Optional[LoggingOptions] = None
@@ -127,7 +124,7 @@ class SimulationConfig:
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "SimulationConfig":
         env_cfg = EnvironmentConfig(**data["environment"])
-        robot_cfgs = [RobotConfig(**item) for item in data.get("robots", [])]
+        robot_cfgs = RobotConfig(**data["robots"])
         sim_options = SimulationOptions(**data.get("simulation", {}))
         viz_options = (
             VisualizationOptions(**data["visualization"])
@@ -152,11 +149,33 @@ def load_config(path: str | Path) -> SimulationConfig:
         data = json.load(config_file)
     return SimulationConfig.from_dict(data)
 
+def spawn_robot_pos(environment : OccupancyGridEnvironment, n_robots : int) -> np.array:
+    """find n_robots unique positions to spawn robots that are unoccupied
+    @param environment : OccupancyGridEnvironment - map environment
+    @param n_robots : int - number of robots
+    @return initial positions : np.array (n_robots, 2)
+    """
+
+    # mask unoccupied cells
+    grid = environment.grid
+    unoccupied_grid = (grid == 1)
+
+    # get free cells list
+    xs, ys = np.where(unoccupied_grid)
+    coords = np.column_stack((xs, ys))
+
+    # choose n_robots from unoccupied cells
+    selected_positions = coords[np.random.choice(len(coords), n_robots, replace=False)]
+
+    return selected_positions
 
 def build_simulation(config: SimulationConfig) -> Simulation:
     """Construct a :class:`Simulation` from a :class:`SimulationConfig`."""
     environment = config.environment.build()
-    robots = [robot_cfg.build() for robot_cfg in config.robots]
+
+    # spawn robots
+    initial_robot_positions = spawn_robot_pos(environment, config.simulation.number_robots)
+    robots = [config.robots.build(i, position) for i, position in enumerate(initial_robot_positions)]
     network_graph = create_network_graph(config.simulation.network_graph_type)
     simulation = Simulation(
         environment=environment,

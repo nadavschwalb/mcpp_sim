@@ -15,6 +15,10 @@ class Policy(ABC):
         self._last_move_success = True
 
     @abstractmethod
+    def initialize(self, environment: OccupancyGridEnvironment, robot: Any, robots: list) -> Any:
+        """initialize the policy using the environment and robot state"""
+
+    @abstractmethod
     def observe(self, environment: OccupancyGridEnvironment, robot: Any, robots: list) -> Any:
         """Observe the environment and robot state."""
 

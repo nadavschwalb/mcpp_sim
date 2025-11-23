@@ -8,7 +8,8 @@ from typing import Dict, Iterable, List, Tuple
 
 from ..environment import OccupancyGridEnvironment
 from ..logging_utils import get_robot_logger
-from ..policies import Policy
+from ..policies.base import Policy
+import numpy as np
 
 Move = Tuple[int, int]
 
@@ -18,6 +19,14 @@ ACTIONS: Dict[str, Move] = {
     "left": (0, -1),
     "right": (0, 1),
     "stay": (0, 0),
+}
+
+ACTION_VECTOR: Dict[str, Move] = {
+    (-1,0) : "up"   ,
+    (1, 0) : "down" ,
+    (0,-1) : "left" ,
+    (0, 1) : "right",
+    (0, 0) : "stay" ,
 }
 
 
@@ -30,7 +39,7 @@ def action_space() -> Tuple[str, ...]:
 class Robot:
     """Robot with discrete motions and policy-driven actions."""
 
-    robot_id: str
+    robot_id: int
     position: Tuple[int, int]
     policy: Policy
     observation_range: int = 1
@@ -38,19 +47,29 @@ class Robot:
     _logger: logging.Logger = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
-        self._logger = get_robot_logger(self.robot_id)
+        self._logger = get_robot_logger(f"robot_{self.robot_id}")
         self.track.append(self.position)
         self._logger.debug(
             "Robot initialized | id=%s | position=%s | observation_range=%s",
-            self.robot_id,
+            f"robot_{self.robot_id}",
             self.position,
             self.observation_range,
         )
+
+    def initialize(self, environment : OccupancyGridEnvironment, robots : List["Robot"]):
+        """robot and policy initialization step"""
+        self.policy.initialize(environment, self, robots)
 
     @property
     def actions(self) -> Iterable[str]:
         """Return the discrete action labels available to the robot."""
         return ACTIONS.keys()
+
+    @property
+    def action_vector(self) -> Dict:
+        """return the dictionary mapping from vectors to string movements"""
+        return ACTION_VECTOR
+
 
     def step(self, environment: OccupancyGridEnvironment, robots: List["Robot"]) -> bool:
         """Advance the robot by executing the next policy action."""
@@ -80,6 +99,8 @@ class Robot:
         self._logger.debug("Move success | new_position=%s", self.position)
         return True
 
+
+
     def _default_observation(self, environment: OccupancyGridEnvironment) -> Dict[str, object]:
         """Default observation data used when the policy opts out."""
         window = list(environment.observation_window(self.position, self.observation_range))
@@ -108,7 +129,7 @@ class Robot:
             return False
 
         for other in robots:
-            if other is not self and other.position == (row, col):
+            if other is not self and np.all(other.position == (row, col)):
                 self._logger.info("Collision move rejected | other_robot=%s", other.robot_id)
                 return False
 

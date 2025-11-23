@@ -149,6 +149,9 @@ def _load_grayscale_array(image_path: str | Path) -> GridArray:
     """Load an image file as a normalized grayscale numpy array."""
     image = Image.open(image_path).convert("L")
     array = np.asarray(image, dtype=np.float32)
+
+    # crop array to be even
+    array = array[(array.shape[0] // 2)*2, (array.shape[1] // 2)*2]
     return array / 255.0
 
 

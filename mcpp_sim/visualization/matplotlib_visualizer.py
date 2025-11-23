@@ -13,7 +13,7 @@ from matplotlib.collections import LineCollection
 
 from ..environment import OccupancyGridEnvironment
 from ..logging_utils import get_visualization_logger
-from ..robots import Robot
+from ..robots.robot import Robot
 from ..network_graph import BaseNetworkGraph
 import math
 

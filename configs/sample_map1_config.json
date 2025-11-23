@@ -1,69 +1,27 @@
 {
   "environment": {
     "source": "bitmap",
-    "path": "maps/map_1.bmp",
+    "path": "maps/map_2.bmp",
     "cell_size": 10.0,
     "footprint": [
       1,
       1
     ],
-    "scale": 10,
+    "scale": 12,
     "threshold": 0.5
   },
-  "robots": [
+  "robots": {
+    "policy" :
     {
-      "robot_id": "robot_alpha",
-      "start": [
-        2,
-        3
-      ],
-      "policy": {
-        "type": "random",
-        "seed": 0
-      },
-      "observation_range": 2
+      "type": "nb_mstc"
     },
-    {
-      "robot_id": "robot_beta",
-      "start": [
-        12,
-        18
-      ],
-      "policy": {
-        "type": "random",
-        "seed": 0
-      },
-      "observation_range": 2
-    },
-    {
-      "robot_id": "robot_gama",
-      "start": [
-        32,
-        45
-      ],
-      "policy": {
-        "type": "random",
-        "seed": 0
-      },
-      "observation_range": 2
-    },
-    {
-      "robot_id": "robot_delta",
-      "start": [
-        75,
-        57
-      ],
-      "policy": {
-        "type": "random",
-        "seed": 0
-      },
-      "observation_range": 2
-    }
-  ],
+    "observation_range" : 2
+  },
   "simulation": {
+    "number_robots" : 3,
     "step_limit": 500,
     "stop_when_complete": true,
-    "step_interval_ms": 20,
+    "step_interval_ms": 1,
     "network_graph_type": "eucleadian"
   },
   "visualization": {

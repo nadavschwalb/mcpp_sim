@@ -18,9 +18,9 @@ if __package__ is None or __package__ == "":  # pragma: no cover - script execut
 from mcpp_sim.config import build_simulation, build_visualizer, load_config
 from mcpp_sim.environment import OccupancyGridEnvironment
 from mcpp_sim.logging_utils import configure_logging, get_simulation_logger
-from mcpp_sim.robots import Robot
+from mcpp_sim.robots.robot import Robot
 from mcpp_sim.network_graph import BaseNetworkGraph
-from mcpp_sim.visualization import MatplotlibVisualizer, SummaryVisualizer
+from mcpp_sim.visualization.matplotlib_visualizer import MatplotlibVisualizer, SummaryVisualizer
 
 
 def parse_args(argv: List[str] | None = None) -> argparse.Namespace:

@@ -7,7 +7,7 @@ from typing import Callable, Dict, Iterable, List, Optional
 import networkx as nx
 from .environment import OccupancyGridEnvironment
 from .logging_utils import get_simulation_logger
-from .robots import Robot
+from .robots.robot import Robot
 from .network_graph import BaseNetworkGraph
 from .network_graph import EucleadianGraph
 from math import hypot
@@ -31,9 +31,16 @@ class Simulation:
         self._logger.debug("Simulation initialized | robots=%s", len(self.robots))
         self._initialize_environment_occupancy()
         self.metrics = {'mst_bottleneck': [], 'coverage_ratio': []}
+
     # ------------------------------------------------------------------
     # Core loop
     # ------------------------------------------------------------------
+
+    def initialize(self):
+        """an optional apriori initialization step for the robot to preform, call robot init step"""
+        for robot in self.robots:
+            robot.initialize(self.environment, self.robots)
+
     def step(self) -> Dict[str, bool]:
         """Advance the simulation by one timestep and return move outcomes."""
         move_results: Dict[str, bool] = {}
@@ -74,6 +81,10 @@ class Simulation:
     def run(self, steps: Optional[int] = None, stop_when_complete: bool = True) -> None:
         """Run the simulation for a number of steps or until coverage completes."""
         target_steps = steps or self.step_limit
+
+        # initialize step
+        self.initialize()
+
         while True:
             if target_steps is not None and self.step_count >= target_steps:
                 self._logger.info("Step limit reached | steps=%s", self.step_count)

@@ -7,6 +7,7 @@ from typing import Mapping, Sequence
 from .base import Policy
 from .path_policy import PathPolicy
 from .random_policy import RandomPolicy
+from .NB_MSTC_policy import NBMSTCPolicy
 
 
 def create_policy(config: Mapping[str, object], actions: Sequence[str]) -> Policy:
@@ -22,5 +23,8 @@ def create_policy(config: Mapping[str, object], actions: Sequence[str]) -> Polic
     if policy_type == "random":
         seed = config.get("seed")
         return RandomPolicy(actions, seed=seed if isinstance(seed, int) else None)
+
+    if policy_type == "nb_mstc":
+        return NBMSTCPolicy(actions, 1.0)
 
     raise ValueError(f"Unsupported policy type: {policy_type}")
