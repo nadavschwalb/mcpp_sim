@@ -11,9 +11,9 @@ from .robots.robot import Robot
 from .network_graph import BaseNetworkGraph
 from .network_graph import EucleadianGraph
 from math import hypot
+from .visualization.environment_visualizer import EnvironmentVisualizer, get_environment_visualizer
 
 StepCallback = Callable[[int, OccupancyGridEnvironment, List[Robot], Dict[str, bool]], None]
-
 
 @dataclass
 class Simulation:
@@ -24,6 +24,7 @@ class Simulation:
     step_limit: Optional[int] = None
     callbacks: List[StepCallback] = field(default_factory=list)
     network_graph: Optional[BaseNetworkGraph] = None
+    visualize: bool = True
 
     def __post_init__(self) -> None:
         self._logger = get_simulation_logger()
@@ -31,6 +32,10 @@ class Simulation:
         self._logger.debug("Simulation initialized | robots=%s", len(self.robots))
         self._initialize_environment_occupancy()
         self.metrics = {'mst_bottleneck': [], 'coverage_ratio': []}
+
+        if self.visualize:
+            self.env_visualizer = get_environment_visualizer("simulation", animate=True)
+            self.env_visualizer.draw_grid(self.environment)
 
     # ------------------------------------------------------------------
     # Core loop
@@ -40,9 +45,12 @@ class Simulation:
         """an optional apriori initialization step for the robot to preform, call robot init step"""
         for robot in self.robots:
             robot.initialize(self.environment, self.robots)
+            if self.visualize:
+                self.env_visualizer.draw_robot(robot)
 
     def step(self) -> Dict[str, bool]:
         """Advance the simulation by one timestep and return move outcomes."""
+
         move_results: Dict[str, bool] = {}
         for robot_id, robot in enumerate(self.robots):
             
@@ -64,6 +72,14 @@ class Simulation:
         # compute minimum spanning tree
         mst =  nx.minimum_spanning_tree(self.network_graph.get_graph())
         mst_bottleneck = max([attr[2] for attr in mst.edges.data('weight')])
+
+        # vislualize step
+        if self.visualize:
+            self.env_visualizer.draw_grid(self.environment)
+            for robot in self.robots:
+                self.env_visualizer.draw_robot(robot)
+            self.env_visualizer.draw_graph('connectivity', mst)
+            self.env_visualizer.redraw()
 
         # update metrics
         self.metrics['mst_bottleneck'].append(mst_bottleneck)

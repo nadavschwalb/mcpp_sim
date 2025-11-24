@@ -85,7 +85,7 @@ class SimulationOptions:
     stop_when_complete: bool = True
     step_interval_ms: Optional[float] = None
     network_graph_type: Optional[str] = None
-
+    visualize : bool = True
 
 @dataclass(slots=True)
 class VisualizationOptions:
@@ -181,7 +181,8 @@ def build_simulation(config: SimulationConfig) -> Simulation:
         environment=environment,
         robots=robots,
         step_limit=config.simulation.step_limit,
-        network_graph=network_graph
+        network_graph=network_graph,
+        visualize = config.simulation.visualize
     )
     return simulation
 

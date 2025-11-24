@@ -16,7 +16,7 @@ from ..environment import OccupancyGridEnvironment
 from .base import Policy
 import numpy as np
 import networkx as nx
-from ..visualization.graph_visualizer import GraphVisualizer
+from ..visualization.environment_visualizer import EnvironmentVisualizer, get_environment_visualizer
 from ..robots.robot import ACTION_VECTOR, ACTIONS
 
 class Moves(Enum):
@@ -99,15 +99,15 @@ class NBMSTCPolicy(Policy):
 
         # only the first robot should initialize the path and share it with the others
         if robot.robot_id == 0:
-            self.graph_visualizer = GraphVisualizer()
-            self.graph_visualizer.draw_grid(environment)
+            self.env_visualizer = get_environment_visualizer("nb_mstc planner", animate=True)
+            self.env_visualizer.draw_grid(environment)
 
             # get graph
             graph = self._grid_to_graph(environment)
 
             # calc spanning tree
             self.full_spanning_tree = nx.minimum_spanning_tree(graph)
-            self.graph_visualizer.draw_graph('mstc', self.full_spanning_tree, color='red')
+            self.env_visualizer.draw_graph('mstc', self.full_spanning_tree, color='red')
 
             self.global_path, self.robots_initial_index = self._order_spanning_tree_to_path(self.full_spanning_tree, robot.position, robots)
 
@@ -186,29 +186,22 @@ class NBMSTCPolicy(Policy):
         for i in range(1, grid.shape[0], 2):
             for j in range(1, grid.shape[1], 2):
                 local_grid = grid[i-1:i+1, j-1:j+1]
-                print(local_grid)
 
                 # don't add occupied nodes to graph
                 occupied_mask = (local_grid == 0)
                 if np.any(occupied_mask):
-                    print(f"grid[{i}][{j}]:\n\t{grid[i-1:i+1, j-1:j+1]}")
                     continue
 
                 # add node to graph
                 i_graph = i // 2
                 j_graph = j // 2
                 graph.add_node((i, j), local_grid=local_grid, pos=np.array((i,j)))
-                print(f"added pos ({i}, {j})")
 
                 # connect node to top left neighbors
                 if (i, j-2) in graph.nodes:
                     graph.add_edge((i,j-2), (i,j), weight=1)
                 if (i-2, j) in graph.nodes:
                     graph.add_edge((i-2,j), (i,j), weight=1)
-
-                # draw current graph
-                # self.graph_visualizer.clear_graphs()
-                # self.graph_visualizer.draw_graph('full graph', graph, color='blue')
         
         return graph
 
@@ -283,11 +276,11 @@ class NBMSTCPolicy(Policy):
             # add next pos to path_graph
             path_graph.add_node(tuple(next_pos), pos=next_pos+0.5)
             path_graph.add_edge(tuple(current_pos), tuple(next_pos))
-            self.graph_visualizer.draw_graph('path graph', path_graph, color='green')
+            self.env_visualizer.draw_graph('path graph', path_graph, color='green')
+            self.env_visualizer.redraw()
 
             # have we transitioned to the next robot?
             if tuple(next_pos) in robot_poses.keys():
-                # robot_initial_index[robot_poses[tuple(next_pos)]] = len(global_path) - 1
                 robot_id =  robot_poses[tuple(next_pos)]
                 robot_initial_index.append((robot_id,len(global_path) + 1))
 

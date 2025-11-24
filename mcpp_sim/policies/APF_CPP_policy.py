@@ -71,26 +71,6 @@ def get_neighbors(grid : np.ndarray, position : tuple):
     window = padded[r:r+size, c:c+size]
     return window
 
-    # neighbors = np.zeros((3,3))
-    # print(grid.shape)
-
-    # print(f"qi [{position[0]},{position[1]}] [{grid[position[0],position[1]]}]")
-
-    # # try to append neighbor counter clockwize
-    # for i,j in [[-1,-1], [-1,0], [-1,1], [0,1], [0,0], [1,1], [1,0], [1,-1], [0,-1]]:
-    #     print(f"[i,j] : [{i},{j}]")
-    #     q_n_i = position[0] + i
-    #     q_n_j = position[1] + j
-    #     if 0 <= q_n_i <= grid.shape[0] - 1 and 0 <= q_n_j <= grid.shape[1] - 1:
-    #         print(q_n_i,q_n_i)
-    #         print(float(grid[q_n_i,q_n_j]))
-    #         neighbors[i + 1, j + 1] = grid[q_n_i, q_n_j]
-    #     else:
-    #         neighbors[i + 1, j + 1] = np.NaN
-    # print(neighbors)
-    # return neighbors
-
-
 import pytest
 
 grid = np.array([[11.,12.,13.,14.,15.],
@@ -99,7 +79,6 @@ grid = np.array([[11.,12.,13.,14.,15.],
                  [41.,42.,43.,44.,45.],
                  [51.,52.,53.,54.,55.]])
 
-print(grid.shape)
 
 def test_get_neighbors_center():
     neighbors = get_neighbors(grid, (2,2))
