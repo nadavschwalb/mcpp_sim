@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Iterable, Iterator, Sequence, Tuple
+from typing import Iterable, Iterator, Sequence, Tuple, Dict
 
 import numpy as np
 from PIL import Image
@@ -32,6 +32,7 @@ class OccupancyGridEnvironment:
     cell_size: float = 1.0
     footprint: Tuple[int, int] = (1, 1)
     logger_name: str = "mcpp.environment"
+    overlays: Dict[str, GridArray] = field(default_factory=dict, init=False)
 
     def __post_init__(self) -> None:
         self._logger = get_environment_logger()
@@ -144,6 +145,24 @@ class OccupancyGridEnvironment:
                 if self.is_within_bounds(row, col):
                     yield row, col, self.cell_state(row, col)
 
+    def add_overlay(self, name: str, overlay: GridArray) -> None:
+        """Add an overlay grid with the specified name."""
+        self.overlays[name] = overlay.astype(np.float32)
+        self._logger.debug("Overlay added | name=%s | shape=%s", name, overlay.shape)
+
+    def remove_overlay(self, name: str) -> None:
+        """Remove an overlay grid by name."""
+        if name in self.overlays:
+            del self.overlays[name]
+            self._logger.debug("Overlay removed | name=%s", name)
+
+    def get_overlay(self, name: str) -> GridArray | None:
+        """Retrieve an overlay grid by name."""
+        return self.overlays.get(name, None)
+    
+    def get_overlays(self) -> Dict[str, GridArray]:
+        """Retrieve all overlay grids."""
+        return self.overlays
 
 def _load_grayscale_array(image_path: str | Path) -> GridArray:
     """Load an image file as a normalized grayscale numpy array."""

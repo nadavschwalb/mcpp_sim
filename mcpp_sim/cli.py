@@ -20,8 +20,7 @@ from mcpp_sim.environment import OccupancyGridEnvironment
 from mcpp_sim.logging_utils import configure_logging, get_simulation_logger
 from mcpp_sim.robots.robot import Robot
 from mcpp_sim.network_graph import BaseNetworkGraph
-from mcpp_sim.visualization.matplotlib_visualizer import MatplotlibVisualizer, SummaryVisualizer
-
+from mcpp_sim.visualization.environment_visualizer import EnvironmentVisualizer
 
 def parse_args(argv: List[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run a multi-robot coverage simulation")
@@ -57,38 +56,15 @@ def main(argv: List[str] | None = None) -> int:
             logger.warning("Invalid step_interval_ms value: %s", raw_interval)
             step_interval_seconds = None
 
-    visualizer = None
-    if not args.headless:
-        visualizer = build_visualizer(config) or MatplotlibVisualizer()
-        if args.animate:
-            def _render_frame(
-                step: int,
-                env: OccupancyGridEnvironment,
-                robots: List[Robot],
-                network_graph: Optional[BaseNetworkGraph],
-                move_results: Dict[str, bool],
-            ) -> None:
-                if visualizer is not None:
-                    visualizer.visualize_step(env, robots, network_graph)
-                if step_interval_seconds:
-                    time.sleep(step_interval_seconds)
-
-            simulation.register_callback(_render_frame)
 
     logger.info("Starting simulation | step_limit=%s", step_limit)
     simulation.run(steps=step_limit, stop_when_complete=config.simulation.stop_when_complete)
-    logger.info(
-        "Simulation complete | steps=%s | coverage=%.3f",
-        simulation.step_count
-    )
 
-    if visualizer and not args.headless and not args.animate:
-        visualizer.visualize(simulation.get_env(), simulation.get_robots())
 
     if not args.no_summary:
-        summary = simulation.summary()
-        SummaryVisualizer(summary)
+        simulation.summary()
 
+    EnvironmentVisualizer.keep_open()
 
     return 0
 

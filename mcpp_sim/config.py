@@ -14,7 +14,6 @@ from .policies.factory import create_policy
 from .robots.robot import Robot, action_space
 from .simulation import Simulation
 from .utils import GridLoader
-from .visualization.matplotlib_visualizer import MatplotlibVisualizer
 from .network_graph import create_network_graph
 
 @dataclass(slots=True)
@@ -95,14 +94,6 @@ class VisualizationOptions:
     show_grid: bool = True
     show_robot_labels: bool = True
 
-    def build(self) -> MatplotlibVisualizer:
-        """Materialize a :class:`MatplotlibVisualizer` with the configured settings."""
-        return MatplotlibVisualizer(
-            show_tracks=self.show_tracks,
-            show_grid=self.show_grid,
-            show_robot_labels=self.show_robot_labels,
-        )
-
 
 @dataclass(slots=True)
 class LoggingOptions:
@@ -175,7 +166,7 @@ def build_simulation(config: SimulationConfig) -> Simulation:
 
     # spawn robots
     initial_robot_positions = spawn_robot_pos(environment, config.simulation.number_robots)
-    robots = [config.robots.build(i, position) for i, position in enumerate(initial_robot_positions)]
+    robots = [config.robots.build(i, tuple(position.tolist())) for i, position in enumerate(initial_robot_positions)]
     network_graph = create_network_graph(config.simulation.network_graph_type)
     simulation = Simulation(
         environment=environment,

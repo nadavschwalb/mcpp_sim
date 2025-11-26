@@ -75,11 +75,3 @@ class GridLoader:
         # expand blocks to be occupied and match 1 to unoccupied and 0 to occupied
         out = 1 - np.kron(block_any.astype(int), np.ones((2,2), dtype=int))
         return out
-
-from scipy.ndimage import binary_dilation
-
-def fill_partial_2x2(grid):
-    grid = 1 - grid
-    se = np.array([[1, 1],
-                   [1, 1]], dtype=bool)
-    return 1 - binary_dilation(grid.astype(bool), structure=se).astype(grid.dtype)

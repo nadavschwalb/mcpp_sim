@@ -108,6 +108,7 @@ class NBMSTCPolicy(Policy):
             # calc spanning tree
             self.full_spanning_tree = nx.minimum_spanning_tree(graph)
             self.env_visualizer.draw_graph('mstc', self.full_spanning_tree, color='red')
+            self.env_visualizer.redraw()
 
             self.global_path, self.robots_initial_index = self._order_spanning_tree_to_path(self.full_spanning_tree, robot.position, robots)
 
@@ -148,14 +149,14 @@ class NBMSTCPolicy(Policy):
         @param observation (not used)
         @return action string [up, down, left, right]
         """
-        position = np.array(position)
+        position_np = np.array(position)
         if len(self.local_path) > 1:
             next_pos = self.local_path.pop(0)
 
-            if not np.all(next_pos == position):
+            if not np.all(next_pos == position_np):
                 raise(ValueError(f"robot is off track"))
 
-            move = self.local_path[0] - position
+            move = self.local_path[0] - position_np
             return ACTION_VECTOR[tuple(move)]
         else:
             return 'stay'
@@ -276,8 +277,9 @@ class NBMSTCPolicy(Policy):
             # add next pos to path_graph
             path_graph.add_node(tuple(next_pos), pos=next_pos+0.5)
             path_graph.add_edge(tuple(current_pos), tuple(next_pos))
-            self.env_visualizer.draw_graph('path graph', path_graph, color='green')
-            self.env_visualizer.redraw()
+
+            # visualize path
+            self.env_visualizer.draw_graph('nb_mstc_path', path_graph, color='green')
 
             # have we transitioned to the next robot?
             if tuple(next_pos) in robot_poses.keys():

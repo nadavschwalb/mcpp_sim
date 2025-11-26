@@ -12,8 +12,57 @@ from .network_graph import BaseNetworkGraph
 from .network_graph import EucleadianGraph
 from math import hypot
 from .visualization.environment_visualizer import EnvironmentVisualizer, get_environment_visualizer
+import numpy as np
 
 StepCallback = Callable[[int, OccupancyGridEnvironment, List[Robot], Dict[str, bool]], None]
+
+
+@dataclass
+class Metrics:
+    """Data class for storing simulation metrics."""
+
+    mst_bottleneck: List[float] = field(default_factory=list)
+    coverage_ratio: List[float] = field(default_factory=list)
+    coverage_ratio_per_robot: Dict[int, List[float]] = field(default_factory=dict)
+
+    def visualize(self) -> None:
+        """Visualize the collected metrics """
+        import matplotlib.pyplot as plt
+        from matplotlib.axes import Axes
+        from matplotlib.figure import Figure
+
+        fig, ax = plt.subplots(3, 1)
+        ax[0].plot(self.mst_bottleneck)
+        ax[0].set_title('MST Bottleneck Over Time')
+        ax[1].plot(self.coverage_ratio)
+        ax[1].set_title('Coverage Ratio Over Time')
+        for robot_id, coverage in self.coverage_ratio_per_robot.items():
+            ax[2].plot(coverage, label=f'Robot {robot_id}')
+        ax[2].set_title('Coverage Ratio Per Robot Over Time')
+        ax[2].legend()
+
+        plt.show()
+
+    def __repr__(self):
+        from rich.console import Console
+        from rich.table import Table
+
+        console = Console()
+
+        table = Table(title="Simulation Metrics Summary")
+        table.add_column("Metric", justify="left", style="cyan", no_wrap=True)
+        table.add_column("Final Value", justify="right", style="magenta")
+        table.add_row("MST Bottleneck Average", f"{np.mean(self.mst_bottleneck):.2f}")
+        table.add_row("Coverage Time", f"{len(self.coverage_ratio)} simulation steps")
+        for robot_id, coverage in self.coverage_ratio_per_robot.items():
+            table.add_row(f"Robot {robot_id} Coverage Average", f"{coverage[-1]:.2f}")
+
+        # Capture the printed table as a string
+        with console.capture() as capture:
+            console.print(table)
+        return capture.get()
+
+        
 
 @dataclass
 class Simulation:
@@ -31,10 +80,10 @@ class Simulation:
         self.step_count: int = 0
         self._logger.debug("Simulation initialized | robots=%s", len(self.robots))
         self._initialize_environment_occupancy()
-        self.metrics = {'mst_bottleneck': [], 'coverage_ratio': []}
+        self.metrics = Metrics()
 
         if self.visualize:
-            self.env_visualizer = get_environment_visualizer("simulation", animate=True)
+            self.env_visualizer = get_environment_visualizer("simulation", animate=False)
             self.env_visualizer.draw_grid(self.environment)
 
     # ------------------------------------------------------------------
@@ -45,6 +94,10 @@ class Simulation:
         """an optional apriori initialization step for the robot to preform, call robot init step"""
         for robot in self.robots:
             robot.initialize(self.environment, self.robots)
+
+            # initialize metrics
+            self.metrics.coverage_ratio_per_robot[robot.robot_id] = []
+
             if self.visualize:
                 self.env_visualizer.draw_robot(robot)
 
@@ -52,7 +105,8 @@ class Simulation:
         """Advance the simulation by one timestep and return move outcomes."""
 
         move_results: Dict[str, bool] = {}
-        for robot_id, robot in enumerate(self.robots):
+        for robot in self.robots:
+            robot_id = robot.robot_id
             
             # update robot step
             success = robot.step(self.environment, self.robots)
@@ -64,6 +118,11 @@ class Simulation:
                     self.network_graph.add_node(robot_id, pos=robot.position)
                 else:
                     self.network_graph.update_node(robot_id, pos=robot.position)
+
+            # calculate current robot coverage ratio percentage of total coverage
+            covered_cells = len(set(robot.track))
+            coverage_ratio = covered_cells / self.environment.grid.size
+            self.metrics.coverage_ratio_per_robot[robot_id].append(coverage_ratio)
 
         # recalculate edges based on current positions
         if self.network_graph is not None:
@@ -82,8 +141,8 @@ class Simulation:
             self.env_visualizer.redraw()
 
         # update metrics
-        self.metrics['mst_bottleneck'].append(mst_bottleneck)
-        self.metrics['coverage_ratio'].append(self.environment.covered_ratio())
+        self.metrics.mst_bottleneck.append(mst_bottleneck)
+        self.metrics.coverage_ratio.append(self.environment.covered_ratio())
 
         self.step_count += 1
         self._logger.debug(
@@ -132,7 +191,8 @@ class Simulation:
         return tuple(self.robots)
 
     def summary(self):
-        return self.metrics
+        print(self.metrics)
+        self.metrics.visualize()
 
     # ------------------------------------------------------------------
     # Internal helpers

@@ -10,14 +10,6 @@ from time import sleep
 
 _visualizer_dict = {}
 
-def get_environment_visualizer(name : str, **attr):
-    if name in _visualizer_dict:
-        return _visualizer_dict[name]
-    else:
-        _visualizer_dict[name] = EnvironmentVisualizer(name, **attr)
-        return _visualizer_dict[name]
-
-
 class EnvironmentVisualizer:
     def __init__(self, name: str, **attr):
         self.widgets = {'graphs' : {}, 'grid': None, 'robots': {}}
@@ -108,6 +100,10 @@ class EnvironmentVisualizer:
         if self.animate:
             plt.pause(self.step_interval_ms / 1000)
 
+    @classmethod
+    def keep_open(cls):
+        plt.ioff()
+        plt.show()
 
     def _graph_to_segments(self, graph : nx.Graph) -> list:
 
@@ -118,5 +114,10 @@ class EnvironmentVisualizer:
 
         return segments
 
-    def _redraw(self):
-        """ redraw plot """
+
+def get_environment_visualizer(name : str, **attr) -> EnvironmentVisualizer:
+    if name in _visualizer_dict:
+        return _visualizer_dict[name]
+    else:
+        _visualizer_dict[name] = EnvironmentVisualizer(name, **attr)
+        return _visualizer_dict[name]

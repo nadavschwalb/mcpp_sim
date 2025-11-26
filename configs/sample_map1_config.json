@@ -31,6 +31,6 @@
     "show_robot_labels": true
   },
   "logging": {
-    "level": "DEBUG"
+    "level": "INFO"
   }
 }
