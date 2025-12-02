@@ -9,12 +9,13 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
-from .environment import OccupancyGridEnvironment
+from .environment.grid import OccupancyGridEnvironment
 from .policies.factory import create_policy
 from .robots.robot import Robot, action_space
 from .simulation import Simulation
 from .utils import GridLoader
 from .network_graph import create_network_graph
+from .visualization.environment_visualizer import get_environment_visualizer
 
 @dataclass(slots=True)
 class EnvironmentConfig:
@@ -85,6 +86,7 @@ class SimulationOptions:
     step_interval_ms: Optional[float] = None
     network_graph_type: Optional[str] = None
     visualize : bool = True
+    animate : bool = True
 
 @dataclass(slots=True)
 class VisualizationOptions:
@@ -173,7 +175,7 @@ def build_simulation(config: SimulationConfig) -> Simulation:
         robots=robots,
         step_limit=config.simulation.step_limit,
         network_graph=network_graph,
-        visualize = config.simulation.visualize
+        env_visualizer = get_environment_visualizer('simulation', animate=config.simulation.animate) if config.simulation.visualize else None
     )
     return simulation
 

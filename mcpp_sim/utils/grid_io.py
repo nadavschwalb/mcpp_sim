@@ -8,7 +8,7 @@ from typing import Tuple
 import numpy as np
 from PIL import Image
 
-from ..environment import CellState, OccupancyGridEnvironment
+from ..environment.grid import CellState, OccupancyGridEnvironment
 
 
 class GridLoader:

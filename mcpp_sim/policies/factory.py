@@ -8,11 +8,14 @@ from .base import Policy
 from .path_policy import PathPolicy
 from .random_policy import RandomPolicy
 from .NB_MSTC_policy import NBMSTCPolicy
+from ..visualization.environment_visualizer import EnvironmentVisualizer , get_environment_visualizer
 
 
 def create_policy(config: Mapping[str, object], actions: Sequence[str]) -> Policy:
     """Instantiate a policy based on the supplied configuration mapping."""
     policy_type = str(config.get("type", "path")).lower()
+
+    visulaizer =  get_environment_visualizer('policy', animate=config.get('animate', False)) if config.get('visualize') else None
 
     if policy_type == "path":
         moves = config.get("path", [])
@@ -22,9 +25,9 @@ def create_policy(config: Mapping[str, object], actions: Sequence[str]) -> Polic
 
     if policy_type == "random":
         seed = config.get("seed")
-        return RandomPolicy(actions, seed=seed if isinstance(seed, int) else None)
+        return RandomPolicy(actions, seed=seed if isinstance(seed, int) else None, visualizer=visulaizer)
 
     if policy_type == "nb_mstc":
-        return NBMSTCPolicy(actions, 1.0)
+        return NBMSTCPolicy(actions, visualizer=visulaizer)
 
     raise ValueError(f"Unsupported policy type: {policy_type}")

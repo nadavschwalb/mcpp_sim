@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.collections import LineCollection
-from ..environment import OccupancyGridEnvironment
+from ..environment.grid import OccupancyGridEnvironment
 import networkx as nx
 import numpy as np
 from ..robots.robot import Robot
@@ -103,7 +103,7 @@ class EnvironmentVisualizer:
     @classmethod
     def keep_open(cls):
         plt.ioff()
-        plt.show()
+        plt.show(block=True)
 
     def _graph_to_segments(self, graph : nx.Graph) -> list:
 

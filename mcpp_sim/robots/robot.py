@@ -6,8 +6,8 @@ import logging
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Tuple
 
-from ..environment import OccupancyGridEnvironment
-from ..logging_utils import get_robot_logger
+from ..environment.grid import OccupancyGridEnvironment
+from ..logging_utils.factories import get_robot_logger
 from ..policies.base import Policy
 import numpy as np
 

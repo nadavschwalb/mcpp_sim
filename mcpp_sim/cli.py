@@ -16,8 +16,8 @@ if __package__ is None or __package__ == "":  # pragma: no cover - script execut
         sys.path.insert(0, str(PARENT_DIR))
 
 from mcpp_sim.config import build_simulation, build_visualizer, load_config
-from mcpp_sim.environment import OccupancyGridEnvironment
-from mcpp_sim.logging_utils import configure_logging, get_simulation_logger
+from mcpp_sim.environment.grid import OccupancyGridEnvironment
+from mcpp_sim.logging_utils.factories import configure_logging, get_simulation_logger
 from mcpp_sim.robots.robot import Robot
 from mcpp_sim.network_graph import BaseNetworkGraph
 from mcpp_sim.visualization.environment_visualizer import EnvironmentVisualizer

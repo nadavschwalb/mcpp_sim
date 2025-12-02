@@ -5,14 +5,16 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Tuple
 
-from ..environment import OccupancyGridEnvironment
+from ..environment.grid import OccupancyGridEnvironment
+# from ..visualization.environment_visualizer import EnvironmentVisualizer
 
 
 class Policy(ABC):
     """Abstract base class for robot policies."""
 
-    def __init__(self) -> None:
+    def __init__(self, **attr) -> None:
         self._last_move_success = True
+        self._env_visualizer : EnvironmentVisualizer = attr.get('visualizer', None)
 
     @abstractmethod
     def initialize(self, environment: OccupancyGridEnvironment, robot: Any, robots: list) -> Any:

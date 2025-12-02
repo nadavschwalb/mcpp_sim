@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import deque
 from typing import Any, Deque, Iterable, Tuple
 
-from ..environment import OccupancyGridEnvironment
+from ..environment.grid import OccupancyGridEnvironment
 from .base import Policy
 
 

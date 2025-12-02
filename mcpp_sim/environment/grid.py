@@ -10,7 +10,7 @@ from typing import Iterable, Iterator, Sequence, Tuple, Dict
 import numpy as np
 from PIL import Image
 
-from ..logging_utils import get_environment_logger
+from ..logging_utils.factories import get_environment_logger
 
 
 class CellState(float, Enum):

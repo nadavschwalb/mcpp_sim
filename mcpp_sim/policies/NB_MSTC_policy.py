@@ -12,7 +12,7 @@ import random
 from typing import Any, Sequence, Tuple
 from enum import Enum
 
-from ..environment import OccupancyGridEnvironment
+from ..environment.grid import OccupancyGridEnvironment
 from .base import Policy
 import numpy as np
 import networkx as nx
@@ -76,7 +76,6 @@ class NBMSTCPolicy(Policy):
     """
     Non Backtracking MSTC policy implementation.
     @param actions: List of possible actions the robot can take.
-    @param velocity: Velocity of the robot. cells per time step.
     """
     boundary_list = []
     Q_covered = None
@@ -85,10 +84,9 @@ class NBMSTCPolicy(Policy):
     P_current_robots = None
     environment_grid = None
 
-    def __init__(self, actions: Sequence[str], velocity: float) -> None:
-        super().__init__()
+    def __init__(self, actions: Sequence[str], **attr) -> None:
+        super().__init__(**attr)
         self.actions = tuple(actions)
-        self.velocity = velocity
         self.q_i = None # current position
         self.q_i_tar = None # target position
         self.global_path = np.array
@@ -99,16 +97,18 @@ class NBMSTCPolicy(Policy):
 
         # only the first robot should initialize the path and share it with the others
         if robot.robot_id == 0:
-            self.env_visualizer = get_environment_visualizer("nb_mstc planner", animate=True)
-            self.env_visualizer.draw_grid(environment)
+            if self._env_visualizer:
+                self._env_visualizer.draw_grid(environment)
 
             # get graph
             graph = self._grid_to_graph(environment)
 
             # calc spanning tree
             self.full_spanning_tree = nx.minimum_spanning_tree(graph)
-            self.env_visualizer.draw_graph('mstc', self.full_spanning_tree, color='red')
-            self.env_visualizer.redraw()
+
+            if self._env_visualizer:
+                self._env_visualizer.draw_graph('mstc', self.full_spanning_tree, color='red')
+                self._env_visualizer.redraw()
 
             self.global_path, self.robots_initial_index = self._order_spanning_tree_to_path(self.full_spanning_tree, robot.position, robots)
 
@@ -279,7 +279,9 @@ class NBMSTCPolicy(Policy):
             path_graph.add_edge(tuple(current_pos), tuple(next_pos))
 
             # visualize path
-            self.env_visualizer.draw_graph('nb_mstc_path', path_graph, color='green')
+            if self._env_visualizer:
+                self._env_visualizer.draw_graph('nb_mstc_path', path_graph, color='green')
+                self._env_visualizer.redraw()
 
             # have we transitioned to the next robot?
             if tuple(next_pos) in robot_poses.keys():

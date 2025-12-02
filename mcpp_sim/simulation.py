@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Callable, Dict, Iterable, List, Optional
 import networkx as nx
-from .environment import OccupancyGridEnvironment
-from .logging_utils import get_simulation_logger
+from .environment.grid import OccupancyGridEnvironment
+from .logging_utils.factories import get_simulation_logger
 from .robots.robot import Robot
 from .network_graph import BaseNetworkGraph
 from .network_graph import EucleadianGraph
@@ -73,7 +73,7 @@ class Simulation:
     step_limit: Optional[int] = None
     callbacks: List[StepCallback] = field(default_factory=list)
     network_graph: Optional[BaseNetworkGraph] = None
-    visualize: bool = True
+    env_visualizer: EnvironmentVisualizer = None
 
     def __post_init__(self) -> None:
         self._logger = get_simulation_logger()
@@ -82,8 +82,7 @@ class Simulation:
         self._initialize_environment_occupancy()
         self.metrics = Metrics()
 
-        if self.visualize:
-            self.env_visualizer = get_environment_visualizer("simulation", animate=False)
+        if self.env_visualizer:
             self.env_visualizer.draw_grid(self.environment)
 
     # ------------------------------------------------------------------
@@ -98,7 +97,7 @@ class Simulation:
             # initialize metrics
             self.metrics.coverage_ratio_per_robot[robot.robot_id] = []
 
-            if self.visualize:
+            if self.env_visualizer:
                 self.env_visualizer.draw_robot(robot)
 
     def step(self) -> Dict[str, bool]:
@@ -133,7 +132,7 @@ class Simulation:
         mst_bottleneck = max([attr[2] for attr in mst.edges.data('weight')])
 
         # vislualize step
-        if self.visualize:
+        if self.env_visualizer:
             self.env_visualizer.draw_grid(self.environment)
             for robot in self.robots:
                 self.env_visualizer.draw_robot(robot)
