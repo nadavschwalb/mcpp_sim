@@ -41,6 +41,8 @@ class Metrics:
         ax[2].set_title('Coverage Ratio Per Robot Over Time')
         ax[2].legend()
 
+        fig.tight_layout()
+
         plt.show()
 
     def __repr__(self):

@@ -28,6 +28,7 @@ class EnvironmentConfig:
     scale: int = 1
     threshold: float = 0.5
     grid: Optional[Sequence[Sequence[float]]] = None
+    overlays: List[Dict[str, Any]] = field(default_factory=list)
 
     def build(self) -> OccupancyGridEnvironment:
         """Create the environment instance described by this config."""
